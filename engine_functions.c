@@ -126,3 +126,71 @@ U64 mask_rook_attacks(int square){
     // return attack map
     return attacks;
 }
+
+U64 bishop_attacks_on_the_fly(int square, U64 block){
+    U64 attacks = 0ULL;
+    int init_rank, init_file;
+
+    int target_rank = square / 8;
+    int target_file = square % 8;
+    
+    // mask relevant bishop occupancy bits
+    for (init_rank = target_rank + 1, init_file = target_file + 1; init_rank <= 7 && init_file <= 7; init_rank++, init_file++) {
+        attacks |= (1ULL << (init_rank * 8 + init_file));
+        if ((1ULL << (init_rank * 8 + init_file)) & block ) break;
+    }
+    for (init_rank = target_rank - 1, init_file = target_file + 1; init_rank >= 0 && init_file <= 7; init_rank--, init_file++) {
+        attacks |= (1ULL << (init_rank * 8 + init_file));
+        if ((1ULL << (init_rank * 8 + init_file)) & block ) break;
+    }
+    for (init_rank = target_rank + 1, init_file = target_file - 1; init_rank <= 7 && init_file >= 0; init_rank++, init_file--) {
+        attacks |= (1ULL << (init_rank * 8 + init_file));
+        if ((1ULL << (init_rank * 8 + init_file)) & block ) break;
+    }
+    for (init_rank = target_rank - 1, init_file = target_file - 1; init_rank >= 0 && init_file >= 0; init_rank--, init_file--) {
+        attacks |= (1ULL << (init_rank * 8 + init_file));
+        if ((1ULL << (init_rank * 8 + init_file)) & block ) break;
+    }
+    
+    // return attack map
+    return attacks;
+}
+
+U64 rook_attacks_on_the_fly(int square, U64 block){
+    U64 attacks = 0ULL;
+
+    int initial_rank, initial_file;
+    
+    // init target rank & files
+    int target_rank = square / 8;
+    int target_file = square % 8;
+    
+    // mask relevant bishop occupancy bits
+    for (initial_rank = target_rank + 1; initial_rank <= 7; initial_rank++) {
+        attacks |= (1ULL << (initial_rank * 8 + target_file));
+        if ((1ULL << (initial_rank * 8 + target_file)) & block ) break;
+    }
+    for (initial_rank = target_rank - 1; initial_rank >= 0; initial_rank--) {
+        attacks |= (1ULL << (initial_rank * 8 + target_file));
+        if ((1ULL << (initial_rank * 8 + target_file)) & block ) break;
+    }
+    for (initial_file = target_file + 1; initial_file <= 7; initial_file++) {
+        attacks |= (1ULL << (target_rank * 8 + initial_file));
+        if ((1ULL << (target_rank * 8 + initial_file)) & block ) break;
+    }
+    for (initial_file = target_file - 1; initial_file >= 0; initial_file--) {
+        attacks |= (1ULL << (target_rank * 8 + initial_file));
+        if ((1ULL << (target_rank * 8 + initial_file)) & block ) break;
+    }
+    
+    return attacks;
+}
+
+ int count_bits(U64 bitboard){
+    int count = 0;
+    while(bitboard){
+        count++;
+        bitboard &= bitboard - 1;
+    }
+    return count;
+}

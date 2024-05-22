@@ -35,5 +35,8 @@ extern U64 mask_knight_attacks(int square);
 extern U64 mask_king_attacks(int square);
 extern U64 mask_bishop_attacks(int square);
 extern U64 mask_rook_attacks(int square);
+extern U64 bishop_attacks_on_the_fly(int square, U64 block);
+extern U64 rook_attacks_on_the_fly(int square, U64 block);
+extern int count_bits(U64 bitboard);
 
 #endif

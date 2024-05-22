@@ -31,7 +31,11 @@ void init_leapers_attacks()
 
 int main(){
     U64 bitboard = 0ULL; 
-    print_bitboard(mask_rook_attacks(a8));
+    //print_bitboard(mask_rook_attacks(a2));
+    set_bit(bitboard, b5);
+    set_bit(bitboard, e3);
+    print_bitboard(rook_attacks_on_the_fly(b3, bitboard));
+    printf("\nNumero di bit attivi: %d\n", count_bits(rook_attacks_on_the_fly(b3, bitboard)));
 
     return 0;
 }
