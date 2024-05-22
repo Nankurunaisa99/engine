@@ -38,5 +38,6 @@ extern U64 mask_rook_attacks(int square);
 extern U64 bishop_attacks_on_the_fly(int square, U64 block);
 extern U64 rook_attacks_on_the_fly(int square, U64 block);
 extern int count_bits(U64 bitboard);
+extern int get_less_significant_bit_index(U64 bitboard);
 
 #endif

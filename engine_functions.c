@@ -194,3 +194,8 @@ U64 rook_attacks_on_the_fly(int square, U64 block){
     }
     return count;
 }
+
+int get_less_significant_bit_index(U64 bitboard){
+    if(bitboard == 0) return -1;
+    return count_bits((bitboard & -bitboard) - 1);
+}
