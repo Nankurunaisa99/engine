@@ -42,3 +42,6 @@ La scacchiera mostrerà degli 0 nelle caselle dove non sono presenti dei pezzi, 
 
 </div>
 
+{% hint style="info" %}
+Nell'ultimo caso, 45222190 sarà la rappresentazione decimale del numero a 64bit identificato dalla nostra tastiera (la tastiera vuota sarà semplicemente 0ULL)
+{% endhint %}
