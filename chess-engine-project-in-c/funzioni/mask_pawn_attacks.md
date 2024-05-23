@@ -27,7 +27,7 @@ Questa funzione genera i bit che possono essere attaccati da una pedina in quals
 
 Partendo da una scacchiera vuota, viene posizionata una pedina sulla scacchiera e si fanno delle considerazioni a seconda se la pedina è bianca o nera (spiego solo nel caso in cui la pedina sia bianca: !side, perchè l'altro caso è analogo e speculare) sul se è legale o meno l'attacco (tenendo in considerazione SOLO la posizione):
 
-<figure><img src="../.gitbook/assets/mask_pawn_attack.jpg" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/mask_pawn_attack.jpg" alt=""><figcaption></figcaption></figure>
 
 Supponiamo che la pedina si trovi nella casella 3 (d4) e che possa attaccare in alto a sinistra (11) o in alto a destra (13); se la pedina è vista come unico bit posto a 1 sulla scacchiera, i bit che rappresentano l'attacco si ottengono facendo uno shift aritmetico (>>) di 7 bit e di 9 bit.
 
@@ -39,6 +39,6 @@ if ((bitboard >> 9) & not_h_file) attacks |= (bitboard >> 9);
 [not\_a\_file](../costanti/special-bitboards.md#not\_a\_file) e [not\_h\_file](../costanti/special-bitboards.md#not\_h\_file) sono delle bitboards speciali che discrimininano i casi in cui la pedina si trovi sulla prima e sull'ultima riga: in questi casi alcune prese uscirebbero fuori dalla scacchiera.\
 Se le condizioni vengono verificate, viene effettuato un OR bit a bit tra attacks (la scacchiera che funge da return) e la scacchiera su cui è posizionata la pedina shiftata di 7 o di 9
 
-<figure><img src="../.gitbook/assets/pawn_attack_c2.PNG" alt=""><figcaption><p>Pedina in c2: può attaccare b3 e d3</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/pawn_attack_c2.PNG" alt=""><figcaption><p>Pedina in c2: può attaccare b3 e d3</p></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/pawn_attack_h3.PNG" alt=""><figcaption><p>Pedina in h3 può attaccare solo g4</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/pawn_attack_h3.PNG" alt=""><figcaption><p>Pedina in h3 può attaccare solo g4</p></figcaption></figure>

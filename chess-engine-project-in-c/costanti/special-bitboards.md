@@ -13,7 +13,7 @@ description: >-
 const U64 not_a_file = 18374403900871474942ULL;
 ```
 
-<figure><img src="../.gitbook/assets/not_a_file.PNG" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/not_a_file.PNG" alt=""><figcaption></figcaption></figure>
 
 ## not\_h\_file
 
@@ -21,7 +21,7 @@ const U64 not_a_file = 18374403900871474942ULL;
 const U64 not_h_file = 9187201950435737471ULL;
 ```
 
-<figure><img src="../.gitbook/assets/not_h_file.PNG" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/not_h_file.PNG" alt=""><figcaption></figcaption></figure>
 
 ## not\_ab\_file
 
@@ -29,7 +29,7 @@ const U64 not_h_file = 9187201950435737471ULL;
 const U64 not_ab_file = 18229723555195321596ULL;
 ```
 
-<figure><img src="../.gitbook/assets/not_ab_file.PNG" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/not_ab_file.PNG" alt=""><figcaption></figcaption></figure>
 
 ## not\_hg\_file
 
@@ -37,4 +37,4 @@ const U64 not_ab_file = 18229723555195321596ULL;
 const U64 not_hg_file = 4557430888798830399ULL;
 ```
 
-<figure><img src="../.gitbook/assets/not_hg_file.PNG" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/not_hg_file.PNG" alt=""><figcaption></figcaption></figure>

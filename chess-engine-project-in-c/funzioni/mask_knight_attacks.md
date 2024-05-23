@@ -30,6 +30,6 @@ Partendo da una scacchiera vuota, viene posizionato un cavallo sulla scacchiera 
 
 Unica cosa che cambia è che non teniamo traccia del colore del cavallo poichè indifferente.
 
-<figure><img src="../.gitbook/assets/knight_attack_c2.PNG" alt=""><figcaption><p>Cavallo in c2: può attaccare b4, d4, e3, e1, a1 e a3</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/knight_attack_c2.PNG" alt=""><figcaption><p>Cavallo in c2: può attaccare b4, d4, e3, e1, a1 e a3</p></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/knight_attack_h3.PNG" alt=""><figcaption><p>Cavallo in h3: può attaccare solo g1, f2, f4 e g5</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/knight_attack_h3.PNG" alt=""><figcaption><p>Cavallo in h3: può attaccare solo g1, f2, f4 e g5</p></figcaption></figure>
