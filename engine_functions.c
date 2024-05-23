@@ -221,3 +221,15 @@ unsigned int get_random_number(){
     state = number;
     return state;
 }
+
+U64 get_random_U64_numbers(){
+    U64 n1, n2, n3, n4;
+
+    n1 = (U64)(get_random_number() & 0xFFFF);
+    n2 = (U64)(get_random_number() & 0xFFFF);
+    n3 = (U64)(get_random_number() & 0xFFFF);
+    n4 = (U64)(get_random_number() & 0xFFFF);
+
+    return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
+}
+

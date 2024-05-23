@@ -56,5 +56,6 @@ extern int get_less_significant_bit_index(U64 bitboard);
 extern U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask);
 extern void init_leapers_attacks();
 extern unsigned int get_random_number();
+extern U64 get_random_U64_numbers();
 
 #endif
