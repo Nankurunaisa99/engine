@@ -32,13 +32,13 @@ La scacchiera mostrerà degli 0 nelle caselle dove non sono presenti dei pezzi, 
 
 <div align="center" data-full-width="false">
 
-<figure><img src="../.gitbook/assets/bitboard 0.PNG" alt="" width="452"><figcaption><p>Rapprezentazione della scacchiera vuota</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/bitboard 0.PNG" alt="" width="452"><figcaption><p>Rapprezentazione della scacchiera vuota</p></figcaption></figure>
 
 </div>
 
 <div align="center">
 
-<figure><img src="../.gitbook/assets/bitboard generica.PNG" alt="" width="436"><figcaption><p>Rappresentazione della scacchiera con dei pezzi casuali</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/bitboard generica.PNG" alt="" width="436"><figcaption><p>Rappresentazione della scacchiera con dei pezzi casuali</p></figcaption></figure>
 
 </div>
 
