@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include "define.h"
 
-//---------- GLOBALS ----------//
-
-const U64 not_a_file = 18374403900871474942ULL;
-const U64 not_h_file = 9187201950435737471ULL;
-const U64 not_hg_file = 4557430888798830399ULL;
-const U64 not_ab_file = 1822972355519532159;
-
-
 //---------- FUNCTIONS ----------//
 
 
@@ -22,6 +14,7 @@ void print_bitboard(U64 bitboard){
             if(!file) printf(" %d  ", 8 - rank);
 
             printf(" %d ", get_bit(bitboard, square) ? 1 : 0);
+            
         }
         printf("\n");
     }
@@ -156,6 +149,23 @@ U64 bishop_attacks_on_the_fly(int square, U64 block){
     return attacks;
 }
 
+void init_leapers_attacks()
+{
+    // loop over 64 board squares
+    for (int square = 0; square < 64; square++)
+    {
+        // init pawn attacks
+        pawn_attacks[white][square] = mask_pawn_attacks(white, square);
+        pawn_attacks[black][square] = mask_pawn_attacks(black, square);
+        
+        // init knight attacks
+        knight_attacks[square] = mask_knight_attacks(square);
+        
+        // init king attacks
+        king_attacks[square] = mask_king_attacks(square);
+    }
+}
+
 U64 rook_attacks_on_the_fly(int square, U64 block){
     U64 attacks = 0ULL;
 
@@ -198,4 +208,14 @@ U64 rook_attacks_on_the_fly(int square, U64 block){
 int get_less_significant_bit_index(U64 bitboard){
     if(bitboard == 0) return -1;
     return count_bits((bitboard & -bitboard) - 1);
+}
+
+U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask){
+    U64 occupancy = 0ULL;
+    for(int count = 0; count < bits_in_mask; count++){
+        int square = get_less_significant_bit_index(attack_mask);
+        clear_bit(attack_mask, square);
+        if(index & (1 << count)) set_bit(occupancy, square);
+    }
+    return occupancy;
 }

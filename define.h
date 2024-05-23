@@ -27,6 +27,17 @@ enum {
 enum { white, black };
 
 
+//---------- GLOBALS ----------//
+
+extern const char *square_to_coordinates[];
+extern U64 pawn_attacks[2][64];
+extern U64 knight_attacks[64];
+extern U64 king_attacks[64];
+extern const U64 not_a_file;
+extern const U64 not_h_file;
+extern const U64 not_hg_file;
+extern const U64 not_ab_file;
+
 //---------- FUNCTIONS ----------//
 
 extern void print_bitboard(U64 bitboard);
@@ -39,5 +50,7 @@ extern U64 bishop_attacks_on_the_fly(int square, U64 block);
 extern U64 rook_attacks_on_the_fly(int square, U64 block);
 extern int count_bits(U64 bitboard);
 extern int get_less_significant_bit_index(U64 bitboard);
+extern U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask);
+extern void init_leapers_attacks();
 
 #endif
