@@ -5,8 +5,10 @@
 
 int main(){
     init_leapers_attacks();
-    U64 attack_mask = mask_bishop_attacks(d5);
-    for(int i = 0; i < 10; i++) print_bitboard(set_occupancy(i, count_bits(attack_mask), attack_mask));
+
+    print_bitboard(mask_knight_attacks(c2));
+    print_bitboard(mask_knight_attacks(h3));
 
     return 0;
+
 }

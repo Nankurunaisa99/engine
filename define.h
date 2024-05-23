@@ -37,6 +37,8 @@ extern const U64 not_a_file;
 extern const U64 not_h_file;
 extern const U64 not_hg_file;
 extern const U64 not_ab_file;
+extern const int bishop_relevant_bits[64];
+extern const int rook_relevant_bits[64];
 
 //---------- FUNCTIONS ----------//
 

@@ -3,7 +3,6 @@
 
 //---------- FUNCTIONS ----------//
 
-
 void print_bitboard(U64 bitboard){
     printf("\n");
 
@@ -23,7 +22,6 @@ void print_bitboard(U64 bitboard){
     printf("     Bitboard: %llud\n\n", bitboard);
 }
 
-
 U64 mask_pawn_attacks(int side, int square){
 
     U64 attacks = 0ULL;
@@ -31,16 +29,11 @@ U64 mask_pawn_attacks(int side, int square){
 
     set_bit(bitboard, square);
     
-    // white pawns
-    if (!side)
-    {
+    if (!side){
         if ((bitboard >> 7) & not_a_file) attacks |= (bitboard >> 7);
         if ((bitboard >> 9) & not_h_file) attacks |= (bitboard >> 9);
     }
-    
-    // black pawns
-    else
-    {
+    else{
         if ((bitboard << 7) & not_h_file) attacks |= (bitboard << 7);
         if ((bitboard << 9) & not_a_file) attacks |= (bitboard << 9);    
     }
@@ -56,12 +49,12 @@ U64 mask_knight_attacks(int square){
 
     if ((bitboard >> 17) & not_h_file) attacks |= (bitboard >> 17);
     if ((bitboard >> 15) & not_a_file) attacks |= (bitboard >> 15);
-    if ((bitboard >> 10) & not_ab_file) attacks |= (bitboard >> 10);
-    if ((bitboard >> 6) & not_h_file) attacks |= (bitboard >> 6);
+    if ((bitboard >> 10) & not_hg_file) attacks |= (bitboard >> 10);
+    if ((bitboard >> 6) & not_ab_file) attacks |= (bitboard >> 6);
     if ((bitboard << 17) & not_a_file) attacks |= (bitboard << 17);
     if ((bitboard << 15) & not_h_file) attacks |= (bitboard << 15);
-    if ((bitboard << 10) & not_hg_file) attacks |= (bitboard << 10);
-    if ((bitboard << 6) & not_a_file) attacks |= (bitboard << 6);
+    if ((bitboard << 10) & not_ab_file) attacks |= (bitboard << 10);
+    if ((bitboard << 6) & not_hg_file) attacks |= (bitboard << 6);
 
     return attacks;
 }
