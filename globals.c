@@ -9,6 +9,8 @@ const U64 not_h_file = 9187201950435737471ULL;
 const U64 not_hg_file = 4557430888798830399ULL;
 const U64 not_ab_file = 18229723555195321596ULL;
 
+unsigned int state = 1804289383; // Arbitrary random seed
+
 const char *square_to_coordinates[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",

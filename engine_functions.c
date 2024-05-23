@@ -212,3 +212,12 @@ U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask){
     }
     return occupancy;
 }
+
+unsigned int get_random_number(){
+    unsigned int number = state;
+    number ^= number << 13;
+    number ^= number >> 17;
+    number ^= number << 5;
+    state = number;
+    return state;
+}
