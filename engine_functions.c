@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "define.h"
 
 //---------- FUNCTIONS ----------//
@@ -203,9 +204,17 @@ int get_less_significant_bit_index(U64 bitboard){
     return count_bits((bitboard & -bitboard) - 1);
 }
 
-U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask){
+/*
+    La funzione set_occupancy prende in input un indice, number_of_bits_in_mask che tiene conto del
+    numero di bits presenti nella maschera d'attacco del pezzo corrispondente (count_bits(attack_mask)) e la maschera stessa.
+    l'indice serve perchè la funzione verrà chiamata n volte, una per ogni possibile occupazione della maschera.
+
+*/
+
+
+U64 set_occupancy(int index, int number_of_bits_in_mask, U64 attack_mask){ 
     U64 occupancy = 0ULL;
-    for(int count = 0; count < bits_in_mask; count++){
+    for(int count = 0; count < number_of_bits_in_mask; count++){
         int square = get_less_significant_bit_index(attack_mask);
         clear_bit(attack_mask, square);
         if(index & (1 << count)) set_bit(occupancy, square);
@@ -222,14 +231,52 @@ unsigned int get_random_number(){
     return state;
 }
 
-U64 get_random_U64_numbers(){
+U64 get_random_U64_number(){
     U64 n1, n2, n3, n4;
 
-    n1 = (U64)(get_random_number() & 0xFFFF);
-    n2 = (U64)(get_random_number() & 0xFFFF);
-    n3 = (U64)(get_random_number() & 0xFFFF);
-    n4 = (U64)(get_random_number() & 0xFFFF);
+    n1 = (U64)(get_random_number()) & 0xFFFF;
+    n2 = (U64)(get_random_number()) & 0xFFFF;
+    n3 = (U64)(get_random_number()) & 0xFFFF;
+    n4 = (U64)(get_random_number()) & 0xFFFF;
 
     return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
+}
+
+U64 generate_magic_number_candidate(){
+    return get_random_U64_number() & get_random_U64_number() & get_random_U64_number();
+}
+
+U64 find_magic_number(int square, int relevant_bits, int bishop){
+    U64 occupancies[4096]; //Massimo numero di occupancies possibili per una maschera di 64 bit (4096 è il massimo per ora a causa del max numero di relevant bits per una maschera di attacco della torre)
+    U64 attacks[4096]; 
+    U64 used_attacks[4096];
+    memset(used_attacks, 0ULL, sizeof(used_attacks)); //Imposta tutti gli attacchi usati a 0
+    U64 attack_mask = bishop ? mask_bishop_attacks(square) : mask_rook_attacks(square);
+    int occupancy_indicies = 1 << relevant_bits; //serve per impostare index in set_occupancy = 2^relevant_bits
+
+    for(int i = 0; i < occupancy_indicies; i++){
+        //Calcola prima le occupanze (che sarebbero tutte le combinazioni di pezzi che possono bloccare l'attacco del pezzo in base alla maschera di attacco)
+        occupancies[i] = set_occupancy(i, relevant_bits, attack_mask);
+        //Calcola tutti i possibili attacchi per ogni occupazione della maschera in base al pezzo e alla casella  
+        attacks[i] = bishop ? bishop_attacks_on_the_fly(square, occupancies[i]) : rook_attacks_on_the_fly(square, occupancies[i]);  
+    }
+
+    for(int random_count = 0; random_count < 100000000; random_count++){
+        U64 magic_number = generate_magic_number_candidate();
+        //l'if serve per capire se il magic_number va bene o meno 
+        if(count_bits((attack_mask * magic_number) & 0xFF00000000000000ULL) < 6) continue;
+
+
+        int index, fail_flag;
+
+        for(index = 0, fail_flag = 0; !fail_flag && index < occupancy_indicies; index++){
+            int magic_index = (int)((occupancies[index] * magic_number) >> (64 - relevant_bits));
+            if(used_attacks[magic_index] == 0ULL) used_attacks[magic_index] = attacks[index];
+            else if(used_attacks[magic_index] != attacks[index]) fail_flag = 1;
+        }
+        if (!fail_flag) return magic_number;  
+    }
+    printf("Magic number fails");
+    return 0ULL;
 }
 

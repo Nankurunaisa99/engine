@@ -26,6 +26,8 @@ enum {
 
 enum { white, black };
 
+enum { rook, bishop };
+
 
 //---------- GLOBALS ----------//
 
@@ -39,6 +41,8 @@ extern const U64 not_hg_file;
 extern const U64 not_ab_file;
 extern const int bishop_relevant_bits[64];
 extern const int rook_relevant_bits[64];
+extern const U64 rook_magic_numbers[64];
+extern const U64 bishop_magic_numbers[64];
 extern unsigned int state;
 
 //---------- FUNCTIONS ----------//
@@ -56,6 +60,8 @@ extern int get_less_significant_bit_index(U64 bitboard);
 extern U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask);
 extern void init_leapers_attacks();
 extern unsigned int get_random_number();
-extern U64 get_random_U64_numbers();
+extern U64 get_random_U64_number();
+extern U64 generate_magic_number_candidate();
+extern U64 find_magic_number(int square, int relevant_bits, int bishop);
 
 #endif
