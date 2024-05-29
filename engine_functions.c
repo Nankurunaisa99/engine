@@ -280,3 +280,43 @@ U64 find_magic_number(int square, int relevant_bits, int bishop){
     return 0ULL;
 }
 
+void init_sliders_attacks(int bishop){
+    for(int square = 0; square < 64; square++){
+        bishop_masks[square] = mask_bishop_attacks(square);
+        rook_masks[square] = mask_rook_attacks(square);
+
+        U64 attack_mask = bishop ? bishop_masks[square] : rook_masks[square];
+
+        int relevant_bits_count = count_bits(attack_mask);
+        int occupancy_indicies = (1 << relevant_bits_count);
+
+        for(int index = 0; index < occupancy_indicies; index++){
+            if(bishop){
+                U64 occupancy = set_occupancy(index, relevant_bits_count, attack_mask);
+                int magic_index = ((occupancy * bishop_magic_numbers[square]) >> (64 - bishop_relevant_bits[square]));
+                bishop_attacks[square][magic_index] = bishop_attacks_on_the_fly(square, occupancy);
+            }
+            else{
+                U64 occupancy = set_occupancy(index, relevant_bits_count, attack_mask);
+                int magic_index = ((occupancy * rook_magic_numbers[square]) >> (64 - rook_relevant_bits[square]));
+                rook_attacks[square][magic_index] = rook_attacks_on_the_fly(square, occupancy);
+            }
+        }
+    }
+}
+
+U64 get_bishop_attacks(int square, U64 occupancy){
+    occupancy &= bishop_masks[square];
+    occupancy *= bishop_magic_numbers[square];
+    occupancy >>= 64 - bishop_relevant_bits[square];
+
+    return bishop_attacks[square][occupancy];
+}
+
+U64 get_rook_attacks(int square, U64 occupancy){
+    occupancy &= rook_masks[square];
+    occupancy *= rook_magic_numbers[square];
+    occupancy >>= 64 - rook_relevant_bits[square];
+
+    return rook_attacks[square][occupancy];
+}

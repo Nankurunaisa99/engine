@@ -21,13 +21,16 @@ enum {
     a4, b4, c4, d4, e4, f4, g4, h4,
     a3, b3, c3, d3, e3, f3, g3, h3,
     a2, b2, c2, d2, e2, f2, g2, h2,
-    a1, b1, c1, d1, e1, f1, g1, h1
+    a1, b1, c1, d1, e1, f1, g1, h1, no_sqr
 };
 
-enum { white, black };
+enum { white, black, both };
 
 enum { rook, bishop };
 
+enum { wk = 1, wq = 2, bk = 4, bq = 8 }; //l'arrocco verrà rappresentato da un numero a 4 bit dove ogni bit indica dove è possibile effettuarlo
+
+enum { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 //---------- GLOBALS ----------//
 
@@ -44,6 +47,18 @@ extern const int rook_relevant_bits[64];
 extern const U64 rook_magic_numbers[64];
 extern const U64 bishop_magic_numbers[64];
 extern unsigned int state;
+extern U64 bishop_attacks[64][512];
+extern U64 rook_attacks[64][4096];
+extern U64 bishop_masks[64];
+extern U64 rook_masks[64];
+extern U64 bitboards[12];
+extern U64 occupancies[3];
+extern int side;
+extern int enpassant;
+extern int castle;
+extern char ascii_pieces[12];
+extern char *unicode_pieces[12];
+extern int char_pieces[];
 
 //---------- FUNCTIONS ----------//
 
@@ -63,5 +78,8 @@ extern unsigned int get_random_number();
 extern U64 get_random_U64_number();
 extern U64 generate_magic_number_candidate();
 extern U64 find_magic_number(int square, int relevant_bits, int bishop);
+extern void init_sliders_attacks(int bishop);
+extern U64 get_bishop_attacks(int square, U64 occupancy);
+extern U64 get_rook_attacks(int square, U64 occupancy);
 
 #endif

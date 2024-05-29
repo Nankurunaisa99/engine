@@ -3,6 +3,18 @@
 U64 pawn_attacks[2][64];
 U64 knight_attacks[64];
 U64 king_attacks[64];
+U64 bishop_attacks[64][512];
+U64 rook_attacks[64][4096];
+
+U64 bishop_masks[64];
+U64 rook_masks[64];
+
+U64 bitboards[12]; // 0-5 white pieces, 6-11 black pieces and 12-13 for both colors
+U64 occupancies[3];
+
+int side = -1;
+int enpassant = no_sqr;
+int castle = 0;
 
 const U64 not_a_file = 18374403900871474942ULL;
 const U64 not_h_file = 9187201950435737471ULL;
@@ -10,6 +22,24 @@ const U64 not_hg_file = 4557430888798830399ULL;
 const U64 not_ab_file = 18229723555195321596ULL;
 
 unsigned int state = 1804289383; // Arbitrary random seed
+
+char ascii_pieces[12] = "PNBRQKpnbrqk";
+char *unicode_pieces[12] = {"♟","♞","♝","♜","♛","♚","♙","♘","♗","♖","♕","♔"};
+int char_pieces[] = {
+    ['P'] = P,
+    ['N'] = N,
+    ['B'] = B,
+    ['R'] = R,
+    ['Q'] = Q,
+    ['K'] = K,
+    ['p'] = p,
+    ['n'] = n,
+    ['b'] = b,
+    ['r'] = r,
+    ['q'] = q,
+    ['k'] = k
+};
+
 
 const char *square_to_coordinates[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
