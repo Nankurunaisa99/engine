@@ -23,6 +23,40 @@ void print_bitboard(U64 bitboard){
     printf("     Bitboard: %llud\n\n", bitboard);
 }
 
+void print_board(){
+    printf("\n");
+
+    for(int rank = 0; rank < 8; rank++){
+        for(int file = 0; file < 8; file++){
+            int square = rank * 8 + file;
+            
+            if(!file) printf(" %d  ", 8 - rank);
+
+            int piece = -1;
+            for(int bb_piece = P; bb_piece <= k; bb_piece++){
+                if(get_bit(bitboards[bb_piece], square)){
+                    piece = bb_piece;    
+                }
+            
+            }
+
+            if(piece == -1) printf(" . ");
+            else printf(" %s ", unicode_pieces[piece]);
+        }
+        printf("\n");
+    }
+
+    printf("\n     A  B  C  D  E  F  G  H\n\n");
+    printf("     Bitboard: %llud\n\n", bitboards[0]);
+    printf("     Side: %s\n", side == white ? "White" : "Black");
+    printf("     Enpassant: %s\n", enpassant == no_sqr ? "no square" : square_to_coordinates[enpassant]);
+    printf("     Castling:  %c%c%c%c\n\n", (castle & wk) ? 'K' : '-',
+                                           (castle & wq) ? 'Q' : '-',
+                                           (castle & bk) ? 'k' : '-',
+                                           (castle & bq) ? 'q' : '-');
+    
+}
+
 U64 mask_pawn_attacks(int side, int square){
 
     U64 attacks = 0ULL;
@@ -319,4 +353,70 @@ U64 get_rook_attacks(int square, U64 occupancy){
     occupancy >>= 64 - rook_relevant_bits[square];
 
     return rook_attacks[square][occupancy];
+}
+
+void parse_fen(const char *fen){
+    memset(bitboards, 0ULL, sizeof(bitboards));
+    memset(occupancies, 0ULL, sizeof(occupancies));
+    side = white;
+    enpassant = no_sqr;
+    castle = 0;
+
+    for(int rank = 0; rank < 8; rank++){
+        for(int file = 0; file < 8; file++){
+            int square = rank * 8 + file;
+            if((*fen >= 'a' && *fen <= 'z') || (*fen >= 'A' && *fen <= 'Z')){
+                int piece = char_pieces[*fen];
+                set_bit(bitboards[piece], square);
+                
+                fen++;
+            }
+            if(*fen >= '0' && *fen <= '9'){
+                int offset = *fen - '0';
+                int piece = -1;
+                for(int bb_piece = P; bb_piece <= k; bb_piece++){
+                    if(get_bit(bitboards[bb_piece], square)){
+                        piece = bb_piece;
+                    }
+                }
+                if(piece == -1) file--;
+
+                file += offset;
+                fen++;
+            }
+            if(*fen == '/') *fen++;
+        }
+    }
+    *fen++;
+    (*fen == 'w') ? (side = white) : (side = black);
+    fen += 2;
+    while(*fen != ' '){
+        switch(*fen){
+            case 'K': castle |= wk; break;
+            case 'Q': castle |= wq; break;
+            case 'k': castle |= bk; break;
+            case 'q': castle |= bq; break;
+            case '-': castle = 0; break;
+        }
+        *fen++;
+    }
+    *fen++;
+    if (*fen != '-'){
+        int file = fen[0] - 'a';
+        int rank = 8 - (fen[1] - '0');
+        enpassant = rank * 8 + file;
+    }
+    else enpassant = no_sqr;
+    
+    for(int piece = P; piece <= K; piece++)
+        occupancies[white] |= bitboards[piece];
+    
+    for(int piece = p; piece <= k; piece++)
+        occupancies[black] |= bitboards[piece];
+
+    occupancies[both] = occupancies[white] | occupancies[black];
+}
+
+U64 get_queen_attacks(int square, U64 occupancy){
+    return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }

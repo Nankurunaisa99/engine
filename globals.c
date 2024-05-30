@@ -12,7 +12,7 @@ U64 rook_masks[64];
 U64 bitboards[12]; // 0-5 white pieces, 6-11 black pieces and 12-13 for both colors
 U64 occupancies[3];
 
-int side = -1;
+int side = 0;
 int enpassant = no_sqr;
 int castle = 0;
 
