@@ -25,6 +25,7 @@ unsigned int state = 1804289383; // Arbitrary random seed
 
 char ascii_pieces[12] = "PNBRQKpnbrqk";
 char *unicode_pieces[12] = {"♟","♞","♝","♜","♛","♚","♙","♘","♗","♖","♕","♔"};
+
 int char_pieces[] = {
     ['P'] = P,
     ['N'] = N,
@@ -40,6 +41,16 @@ int char_pieces[] = {
     ['k'] = k
 };
 
+const char promoted_pieces[] = {
+    [N] = 'n',
+    [B] = 'b',
+    [R] = 'r',
+    [Q] = 'q',
+    [n] = 'n',
+    [b] = 'b',
+    [r] = 'r',
+    [q] = 'q'
+};
 
 const char *square_to_coordinates[] = {
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",

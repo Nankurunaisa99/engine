@@ -219,8 +219,7 @@ U64 rook_attacks_on_the_fly(int square, U64 block){
     for (initial_file = target_file - 1; initial_file >= 0; initial_file--) {
         attacks |= (1ULL << (target_rank * 8 + initial_file));
         if ((1ULL << (target_rank * 8 + initial_file)) & block ) break;
-    }
-    
+    }   
     return attacks;
 }
 
@@ -387,7 +386,7 @@ void parse_fen(const char *fen){
             if(*fen == '/') *fen++;
         }
     }
-    *fen++;
+    fen++;
     (*fen == 'w') ? (side = white) : (side = black);
     fen += 2;
     while(*fen != ' '){
@@ -398,9 +397,9 @@ void parse_fen(const char *fen){
             case 'q': castle |= bq; break;
             case '-': castle = 0; break;
         }
-        *fen++;
+        fen++;
     }
-    *fen++;
+    fen++;
     if (*fen != '-'){
         int file = fen[0] - 'a';
         int rank = 8 - (fen[1] - '0');
@@ -420,3 +419,33 @@ void parse_fen(const char *fen){
 U64 get_queen_attacks(int square, U64 occupancy){
     return get_bishop_attacks(square, occupancy) | get_rook_attacks(square, occupancy);
 }
+
+int is_square_attacked(int square, int side){
+    if ((side == white) && (pawn_attacks[black][square] & bitboards[P])) return 1;
+    if ((side == black) && (pawn_attacks[white][square] & bitboards[p])) return 1;
+    if (knight_attacks[square] & ((side == white) ? bitboards[N] : bitboards[n])) return 1;
+    if (get_bishop_attacks(square, occupancies[both]) & ((side == white) ? bitboards[B] : bitboards[b])) return 1;
+    if (get_rook_attacks(square, occupancies[both]) & ((side == white) ? bitboards[R] : bitboards[r])) return 1;    
+    if (get_queen_attacks(square, occupancies[both]) & ((side == white) ? bitboards[Q] : bitboards[q])) return 1;
+    if (king_attacks[square] & ((side == white) ? bitboards[K] : bitboards[k])) return 1;
+    return 0;
+}
+
+void print_attacked_squares(int side){
+    
+    printf("\n");
+
+    for (int rank = 0; rank < 8; rank++)
+    {
+        for (int file = 0; file < 8; file++)
+        {
+            int square = rank * 8 + file;
+            if (!file) printf("  %d ", 8 - rank);
+
+            printf(" %d", is_square_attacked(square, side) ? 1 : 0);
+        }
+        printf("\n");
+    }
+    printf("\n     a b c d e f g h\n\n");
+}
+
