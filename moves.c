@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include "define.h"
 
-void generate_moves(){
+void generate_moves(moves *move_list){
+    move_list->count = 0;
     int source_square, target_square;
     U64 bitboard, attacks;
 
@@ -20,17 +21,18 @@ void generate_moves(){
 
                         //Promozione
                         if(source_square >= a7 && source_square <= h7){
-                            printf("Pawn promotion: %s%sq\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sr\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sb\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sn\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+
+                            add_move(move_list, encode_move(source_square, target_square, piece, Q, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, R, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, B, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, N, 0, 0, 0, 0));
                         }
                         else{
                             //Mossa normale
-                            printf("Pawn push: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                            add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                             //Mossa di due caselle
                             if(source_square >= a2 && source_square <= h2 && !get_bit(occupancies[both], target_square - 8)) //-8 perchè si muove avanti di 2 caselle
-                                printf("Pawn double push: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square - 8]);
+                                add_move(move_list, encode_move(source_square, target_square - 8, piece, 0, 0, 1, 0, 0));
                         }
                     }
 
@@ -43,14 +45,16 @@ void generate_moves(){
 
                             //Promozione
                         if(source_square >= a7 && source_square <= h7){
-                           printf("Pawn capture and promotion: %s%sq\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sr\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sb\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sn\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+
+                           add_move(move_list, encode_move(source_square, target_square, piece, Q, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, R, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, B, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, N, 1, 0, 0, 0));
+
                         }
                         else{
                             //Mossa normale
-                            printf("Pawn capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                            add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                         }
                         clear_bit(attacks, target_square);
                     }
@@ -59,7 +63,7 @@ void generate_moves(){
                         U64 enpassant_attacks = pawn_attacks[white][source_square] & (1ULL << enpassant); //L'unico enpassant possibile
                         if(enpassant_attacks){
                             int target_enpassant = get_less_significant_bit_index(enpassant_attacks);
-                            printf("Pawn enpassant: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_enpassant]);
+                            add_move(move_list, encode_move(source_square, target_enpassant, piece, 0, 1, 0, 1, 0));
                         }
                     
                     }
@@ -76,7 +80,7 @@ void generate_moves(){
                     if (!get_bit(occupancies[both], f1) && !get_bit(occupancies[both], g1)){
                         // make sure king and the f1 squares are not under attacks
                         if (!is_square_attacked(e1, black) && !is_square_attacked(f1, black))
-                            printf("castling move: e1g1\n");
+                            add_move(move_list, encode_move(e1, g1, piece, 0, 0, 0, 0, 1));
                     }
                 }
                 
@@ -85,7 +89,7 @@ void generate_moves(){
                     if (!get_bit(occupancies[both], d1) && !get_bit(occupancies[both], c1) && !get_bit(occupancies[both], b1)){
                         // make sure king and the d1 squares are not under attacks
                         if (!is_square_attacked(e1, black) && !is_square_attacked(d1, black))
-                            printf("castling move: e1c1\n");
+                           add_move(move_list, encode_move(e1, c1, piece, 0, 0, 0, 0, 1));
                     }
                 }
             }
@@ -100,17 +104,17 @@ void generate_moves(){
                     //si procede con il discriminare se la mossa è una promozione, una mossa di due caselle o una mossa normale
                     //Promozione
                         if(source_square >= a2 && source_square <= h2){
-                            printf("Pawn promotion: %s%sq\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sr\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sb\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                            printf("Pawn promotion: %s%sn\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                            add_move(move_list, encode_move(source_square, target_square, piece, Q, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, R, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, B, 0, 0, 0, 0));
+                            add_move(move_list, encode_move(source_square, target_square, piece, N, 0, 0, 0, 0));
                         }
                         else{
                             //Mossa normale
-                            printf("Pawn push: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                            add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                             //Mossa di due caselle
                             if(source_square >= a7 && source_square <= h7 && !get_bit(occupancies[both], target_square + 8)) //+ 8 perchè si muove avanti di 2 caselle
-                                printf("Pawn double push: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square + 8]);
+                                add_move(move_list, encode_move(source_square, target_square + 8, piece, 0, 0, 1, 0, 0));
                         }
                     }
                     attacks = pawn_attacks[black][source_square] & occupancies[white];
@@ -119,14 +123,14 @@ void generate_moves(){
                             //Si procede con il discriminare se la cattura porta ad una promozione, è una catura normale o un enpassant
                             //Promozione
                         if(source_square >= a2 && source_square <= h2){
-                           printf("Pawn capture and promotion: %s%sq\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sr\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sb\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
-                           printf("Pawn capture and promotion: %s%sn\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                           add_move(move_list, encode_move(source_square, target_square, piece, Q, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, R, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, B, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, N, 1, 0, 0, 0));
                         }
                         else{
                             //Mossa normale
-                            printf("Pawn capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                            add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                         }
                         clear_bit(attacks, target_square);
                     }
@@ -134,7 +138,7 @@ void generate_moves(){
                         U64 enpassant_attacks = pawn_attacks[black][source_square] & (1ULL << enpassant); //L'unico enpassant possibile
                         if(enpassant_attacks){
                             int target_enpassant = get_less_significant_bit_index(enpassant_attacks);
-                            printf("Pawn enpassant: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_enpassant]);
+                            add_move(move_list, encode_move(source_square, target_enpassant, piece, 0, 1, 0, 1, 0));
                         }
                     }
                     clear_bit(bitboard, source_square);
@@ -146,7 +150,7 @@ void generate_moves(){
                     if (!get_bit(occupancies[both], f8) && !get_bit(occupancies[both], g8)){
                         // make sure king and the f8 squares are not under attacks
                         if (!is_square_attacked(e8, white) && !is_square_attacked(f8, white))
-                            printf("castling move: e8g8\n");
+                            add_move(move_list, encode_move(e8, g8, piece, 0, 0, 0, 0, 1));
                     }
                 }
 
@@ -154,7 +158,7 @@ void generate_moves(){
                     if (!get_bit(occupancies[both], d8) && !get_bit(occupancies[both], c8) && !get_bit(occupancies[both], b8)){
                         // make sure king and the d8 squares are not under attacks
                         if (!is_square_attacked(e8, white) && !is_square_attacked(d8, white))
-                            printf("castling move: e8c8\n");
+                            add_move(move_list, encode_move(e8, c8, piece, 0, 0, 0, 0, 1));
                     }
                 }
             }
@@ -172,9 +176,9 @@ void generate_moves(){
 
                     //Mossa Normale
                     if (!get_bit(((side == white) ? occupancies[black] : occupancies[white]), target_square))
-                        printf("Knight normal move: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                        add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                     //Cattura
-                    else printf("Knight capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                    else add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                     clear_bit(attacks, target_square);
                 }
 
@@ -193,9 +197,9 @@ void generate_moves(){
 
                     //Mossa Normale
                     if (!get_bit(((side == white) ? occupancies[black] : occupancies[white]), target_square))
-                        printf("Bishop normal move: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                        add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                     //Cattura
-                    else printf("Bishop capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                    else add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                     clear_bit(attacks, target_square);
                 }
 
@@ -214,9 +218,9 @@ void generate_moves(){
 
                     //Mossa Normale
                     if (!get_bit(((side == white) ? occupancies[black] : occupancies[white]), target_square))
-                        printf("Rook normal move: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                        add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                     //Cattura
-                    else printf("Rook capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                    else add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                     clear_bit(attacks, target_square);
                 }
 
@@ -235,9 +239,9 @@ void generate_moves(){
 
                     //Mossa Normale
                     if (!get_bit(((side == white) ? occupancies[black] : occupancies[white]), target_square))
-                        printf("Queen normal move: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                        add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                     //Cattura
-                    else printf("Queen capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                    else add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                     clear_bit(attacks, target_square);
                 }
 
@@ -256,9 +260,9 @@ void generate_moves(){
 
                     //Mossa Normale
                     if (!get_bit(((side == white) ? occupancies[black] : occupancies[white]), target_square))
-                        printf("King normal move: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                        add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                     //Cattura
-                    else printf("King capture: %s%s\n", square_to_coordinates[source_square], square_to_coordinates[target_square]);
+                    else add_move(move_list, encode_move(source_square, target_square, piece, 0, 1, 0, 0, 0));
                     clear_bit(attacks, target_square);
                 }
 
@@ -271,5 +275,53 @@ void generate_moves(){
 void print_move(int move){
     printf("%s%s%c\n", square_to_coordinates[get_move_source(move)],
                         square_to_coordinates[get_move_target(move)],
-                        promoted_pieces[get_promoted_piece(move)]);
+                        promoted_pieces[get_move_promoted(move)]);
+}
+
+void print_move_list(moves *move_list){
+
+    if(move_list->count == 0){
+        printf("\n    No moves to print\n\n");
+        return;
+    }
+
+    printf("\n    move    piece   capture   double    enpass    castling\n\n");
+    
+    // loop over moves within a move list
+    for (int move_count = 0; move_count < move_list->count; move_count++)
+    {
+        // init move
+        int move = move_list->moves[move_count];
+        
+        #ifdef WIN64
+            // print move
+            printf("    %s%s%c     %c       %d         %d         %d         %d\n", square_to_coordinates[get_move_source(move)],
+                                                                                  square_to_coordinates[get_move_target(move)],
+                                                                                  get_move_promoted(move) ? promoted_pieces[get_move_promoted(move)] : ' ',
+                                                                                  ascii_pieces[get_move_piece(move)],
+                                                                                  get_move_capture(move) ? 1 : 0,
+                                                                                  get_move_double(move) ? 1 : 0,
+                                                                                  get_move_enpassant(move) ? 1 : 0,
+                                                                                  get_move_castling(move) ? 1 : 0);
+        #else
+            // print move
+            printf("    %s%s%c     %s       %d         %d         %d         %d\n", square_to_coordinates[get_move_source(move)],
+                                                                                  square_to_coordinates[get_move_target(move)],
+                                                                                  get_move_promoted(move) ? promoted_pieces[get_move_promoted(move)] : ' ',
+                                                                                  unicode_pieces[get_move_piece(move)],
+                                                                                  get_move_capture(move) ? 1 : 0,
+                                                                                  get_move_double(move) ? 1 : 0,
+                                                                                  get_move_enpassant(move) ? 1 : 0,
+                                                                                  get_move_castling(move) ? 1 : 0);
+        #endif
+        
+        // print total number of moves
+        
+    }
+    printf("\n\n    Total number of moves: %d\n\n", move_list->count);
+}
+
+void add_move(moves *move_list, int move){
+    move_list->moves[move_list->count] = move;
+    move_list->count++;
 }

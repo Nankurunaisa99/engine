@@ -124,5 +124,8 @@ extern void parse_fen(const char *fen);
 extern int is_square_attacked(int square, int side);
 extern void print_attacked_squares(int side);
 extern void generate_moves();
+extern void print_move(int move);
+extern void print_move_list(moves *move_list);
+extern void add_move(moves *move_list, int move);
 
 #endif

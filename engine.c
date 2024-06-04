@@ -9,16 +9,14 @@ int main(){
     init_sliders_attacks(bishop);
     init_sliders_attacks(rook);
 
-    parse_fen(tricky_position);
+   // parse_fen("R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNNK1B1 w - - 0 1");
+   parse_fen(tricky_position);
     print_board();
 
-    int move = encode_move(e2, e4, P, 0, 0, 0, 0, 0);
-    int source_square = get_move_source(move);
-    int target_square = get_move_target(move);
-
-    printf("Source square: %s\n", square_to_coordinates[source_square]);
-    printf("Target square: %s\n", square_to_coordinates[target_square]);
-    generate_moves();
+    moves move_list[1];
+    move_list->count = 0;
+    generate_moves(move_list);
+    print_move_list(move_list);
 
     return 0;
 
