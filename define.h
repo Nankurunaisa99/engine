@@ -10,6 +10,8 @@
 #define empty_board "8/8/8/8/8/8/8/8 w - - "
 #define start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
 #define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
+#define tricky_position_promotion "r3k2r/pPppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
+#define tricky_position_enpassant "r3k2r/p2pqpb1/bn2pnp1/2pPN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 "
 #define killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 #define cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
@@ -42,6 +44,19 @@
 #define get_move_enpassant(move) (move & 0x400000)
 #define get_move_castling(move) (move & 0x800000)
 
+// preserve board state
+#define copy_board()                                                      \
+    U64 bitboards_copy[12], occupancies_copy[3];                          \
+    int side_copy, enpassant_copy, castle_copy;                           \
+    memcpy(bitboards_copy, bitboards, 96);                                \
+    memcpy(occupancies_copy, occupancies, 24);                            \
+    side_copy = side, enpassant_copy = enpassant, castle_copy = castle;   \
+
+// restore board state
+#define take_back()                                                       \
+    memcpy(bitboards, bitboards_copy, 96);                                \
+    memcpy(occupancies, occupancies_copy, 24);                            \
+    side = side_copy, enpassant = enpassant_copy, castle = castle_copy;   \
 
 //---------- ENUM ----------//
 
@@ -63,6 +78,8 @@ enum { rook, bishop };
 enum { wk = 1, wq = 2, bk = 4, bq = 8 }; //l'arrocco verrà rappresentato da un numero a 4 bit dove ogni bit indica dove è possibile effettuarlo
 
 enum { P, N, B, R, Q, K, p, n, b, r, q, k };
+
+enum { all_moves, only_captures };
 
 //---------- STRUCTS ----------//
 
@@ -99,6 +116,8 @@ extern int castle;
 extern char ascii_pieces[12];
 extern char *unicode_pieces[12];
 extern int char_pieces[];
+extern const int castling_rights[64];
+extern long nodes;
 
 //---------- FUNCTIONS ----------//
 
@@ -130,5 +149,10 @@ extern void generate_moves();
 extern void print_move(int move);
 extern void print_move_list(moves *move_list);
 extern void add_move(moves *move_list, int move);
+extern int make_move(int move, int move_flag);
+extern int get_time_ms();
+extern void perft_driver(int depth);
+extern void perft(int depth);
+extern int parse_move(char *move_string);
 
 #endif

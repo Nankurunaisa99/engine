@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "define.h"
+#ifdef WIN32
+    #include <windows.h>
+#else
+    #include <sys/time.h>
+#endif
 
 //---------- FUNCTIONS ----------//
 
@@ -49,7 +54,7 @@ void print_board(){
     printf("\n     A  B  C  D  E  F  G  H\n\n");
     printf("     Bitboard: %llud\n\n", bitboards[0]);
     printf("     Side: %s\n", side == white ? "White" : "Black");
-    printf("     Enpassant: %s\n", enpassant == no_sqr ? "no square" : square_to_coordinates[enpassant]);
+    printf("     Enpassant: %s\n", (enpassant != no_sqr) ? square_to_coordinates[enpassant] : "No square");
     printf("     Castling:  %c%c%c%c\n\n", (castle & wk) ? 'K' : '-',
                                            (castle & wq) ? 'Q' : '-',
                                            (castle & bk) ? 'k' : '-',
@@ -447,5 +452,58 @@ void print_attacked_squares(int side){
         printf("\n");
     }
     printf("\n     a b c d e f g h\n\n");
+}
+
+int get_time_ms(){
+    #ifdef WIN32
+        return GetTickCount();
+    #else
+        struct timeval time;
+        gettimeofday(&time, NULL);
+        return time.tv_sec * 1000 + time.tv_usec / 1000;
+    #endif
+}
+
+//perft = performance test: conta il numero di nodi in un albero di mosse fino ad una certa profondità
+void perft_driver(int depth){ 
+    if(depth == 0){
+        nodes++;
+        return;
+    }
+    moves move_list[1];
+    generate_moves(move_list);
+
+    for(int move_count = 0; move_count < move_list->count; move_count++){
+        copy_board();
+        if(!make_move(move_list->moves[move_count], all_moves)) continue;
+        perft_driver(depth - 1);
+        take_back();
+    }
+}
+
+void perft(int depth){
+    printf("\n    Performance\n");
+
+    moves move_list[1];
+    generate_moves(move_list);
+
+    int start = get_time_ms();
+
+    for(int move_count = 0; move_count < move_list->count; move_count++){
+        copy_board();
+        if(!make_move(move_list->moves[move_count], all_moves)) continue;
+        long cummulatives_nodes = nodes;    
+        perft_driver(depth - 1);
+        long old_nodes = nodes - cummulatives_nodes;
+        take_back();
+        printf("    move: %s%s%c   nodes: %ld\n", square_to_coordinates[get_move_source(move_list->moves[move_count])],
+                                                  square_to_coordinates[get_move_target(move_list->moves[move_count])],
+                                                  get_move_promoted(move_list->moves[move_count]) ? promoted_pieces[get_move_promoted(move_list->moves[move_count])] : ' ',
+                                                  old_nodes);
+    }
+    printf("\n    Performance test complete\n");
+    printf("\n    Depth: %d\n", depth);
+    printf("\n    Nodes: %ld\n", nodes);
+    printf("\n    Time: %d ms\n", get_time_ms() - start);
 }
 

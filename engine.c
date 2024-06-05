@@ -9,15 +9,17 @@ int main(){
     init_sliders_attacks(bishop);
     init_sliders_attacks(rook);
 
-   // parse_fen("R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNNK1B1 w - - 0 1");
-   parse_fen(tricky_position);
+    parse_fen(tricky_position_enpassant);
     print_board();
 
-    moves move_list[1];
-    move_list->count = 0;
-    generate_moves(move_list);
-    print_move_list(move_list);
-
+    int move = parse_move("d5c6");
+    printf("Move: %d\n", move);
+    if(move){
+        make_move(move, all_moves);
+        print_board();
+    }
+    else
+        printf("Illegal move\n");
     return 0;
 
 }

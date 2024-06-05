@@ -273,9 +273,13 @@ void generate_moves(moves *move_list){
 }
 
 void print_move(int move){
+    if(get_move_promoted(move))
     printf("%s%s%c\n", square_to_coordinates[get_move_source(move)],
                         square_to_coordinates[get_move_target(move)],
                         promoted_pieces[get_move_promoted(move)]);
+    else
+        printf("%s%s\n", square_to_coordinates[get_move_source(move)],
+                        square_to_coordinates[get_move_target(move)]);                    
 }
 
 void print_move_list(moves *move_list){
@@ -324,4 +328,111 @@ void print_move_list(moves *move_list){
 void add_move(moves *move_list, int move){
     move_list->moves[move_list->count] = move;
     move_list->count++;
+}
+
+int make_move(int move, int move_flag){
+    //quiet moves (mosse che non portano ad una cattura)
+    if(move_flag == all_moves){
+        copy_board(); //serve per poter tornare indietro nel caso in cui il re sia in scacco
+        int source_square = get_move_source(move);
+        int target_square = get_move_target(move);
+        int piece = get_move_piece(move);
+        int promoted = get_move_promoted(move);
+        int capture = get_move_capture(move);
+        int double_move = get_move_double(move);
+        int enpas = get_move_enpassant(move);
+        int castl = get_move_castling(move);
+
+        clear_bit(bitboards[piece], source_square);
+        set_bit(bitboards[piece], target_square);
+
+        if(capture){
+            int start_piece, end_piece;
+            if(side == white){
+                start_piece = p;
+                end_piece = k;
+            }
+            else{
+                start_piece = P;
+                end_piece = K;
+            }
+            //loop over bitboards oppoite to the side to move
+            for(int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++){
+                if(get_bit(bitboards[bb_piece], target_square)){ //se la casella di destinazione è occupata da un pezzo avversario lo catturo e lo rimuovo dalla scacchiera
+                    clear_bit(bitboards[bb_piece], target_square);
+                    break;
+                }
+            }
+        }
+        //Handle pawn promotion
+        if(promoted){
+            clear_bit(bitboards[(side == white) ? P : p], target_square);
+            if(side == white)
+                set_bit(bitboards[promoted], target_square);
+            else{
+                set_bit(bitboards[promoted + 6], target_square); //promoted + 6 per passare al pezzo nero perchè promoted è sempre un pezzo bianco
+            }
+        }
+        //Handle enpassant
+        if(enpas)
+            (side == white) ? clear_bit(bitboards[p], target_square + 8) : clear_bit(bitboards[P], target_square - 8);
+        
+        enpassant = no_sqr; //dopo qualsiasi mossa l'enpassant scompare perchè può essere effettuato solo subito dopo la mossa del pedone
+
+        //Handle double pawn push and check if an enpassant is possible
+        if(double_move){
+            enpassant = (side == white) ? target_square + 8 : target_square - 8;
+        }
+
+        //Handle castling
+        if(castl){
+            switch(target_square){
+                case g1:
+                    clear_bit(bitboards[R], h1);
+                    set_bit(bitboards[R], f1);
+                    break;
+                case c1:
+                    clear_bit(bitboards[R], a1);
+                    set_bit(bitboards[R], d1);
+                    break;
+                case g8:
+                    clear_bit(bitboards[r], h8);
+                    set_bit(bitboards[r], f8);
+                    break;
+                case c8:
+                    clear_bit(bitboards[r], a8);
+                    set_bit(bitboards[r], d8);
+                    break;
+            }
+         
+        }
+        //Handle castling rights
+        castle &= castling_rights[source_square] & castling_rights[target_square];
+
+        //Update occupancies
+        memset(occupancies, 0ULL, 24); //24 = 3 * sizeof(U64): è più veloce scrivere direttamente 24
+        for(int bb_piece = P; bb_piece <= K; bb_piece++)
+            occupancies[white] |= bitboards[bb_piece];
+        for(int bb_piece = p; bb_piece <= k; bb_piece++)
+            occupancies[black] |= bitboards[bb_piece];
+        occupancies[both] = occupancies[white] | occupancies[black];
+        
+        //Switch side to move
+        side ^= 1;
+
+        //Check if king is in check
+        if(is_square_attacked((side == white) ? get_less_significant_bit_index(bitboards[k]) : get_less_significant_bit_index(bitboards[K]), side)){
+            take_back(); //Se il re si muove in una casella che è sotto attacco, la mossa è illegale, quindi torno indietro
+            return 0;
+        }
+        else return 1;
+    }
+    else{
+        if(get_move_capture(move)){
+            //cattura
+            make_move(move, all_moves);
+        }
+        else return 0;
+
+    }
 }
