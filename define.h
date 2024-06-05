@@ -1,6 +1,9 @@
 #ifndef DEFINE_H
 #define DEFINE_H
 
+#include <stdio.h>
+#include <string.h>
+
 //---------- DEFINES ----------//
 
 #define U64 unsigned long long
