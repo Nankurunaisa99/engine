@@ -1,5 +1,8 @@
 #include "define.h"
 
+const char *engine_name = "SuperChess Engine 1.0";
+const char *author_name = "Biagio Speranza";
+
 U64 pawn_attacks[2][64];
 U64 knight_attacks[64];
 U64 king_attacks[64];
@@ -12,9 +15,47 @@ U64 rook_masks[64];
 U64 bitboards[12]; // 0-5 white pieces, 6-11 black pieces and 12-13 for both colors
 U64 occupancies[3];
 
+int killer_move[2][MAX_PLY]; // 2 killer moves for each ply (ply is the half move counter) (64 si può aumentare)
+int history_moves[12][64]; // 12 pieces and 64 squares
+
 int side = 0;
 int enpassant = no_sqr;
 int castle = 0;
+
+/*
+      ================================
+            Triangular PV table
+      --------------------------------
+        PV line: e2e4 e7e5 g1f3 b8c6
+      ================================
+
+           0    1    2    3    4    5
+      
+      0    m1   m2   m3   m4   m5   m6
+      
+      1    0    m2   m3   m4   m5   m6 
+      
+      2    0    0    m3   m4   m5   m6
+      
+      3    0    0    0    m4   m5   m6
+       
+      4    0    0    0    0    m5   m6
+      
+      5    0    0    0    0    0    m6
+*/
+
+// Principal Variation: the sequence of moves that the engine considers the best
+
+int pv_length[MAX_PLY];
+int pv_table[MAX_PLY][MAX_PLY];
+
+int follow_pv;
+int score_pv;
+
+int ply; //Half moves counter
+
+int full_depth_moves = 4;
+int reduction_limit = 3;
 
 /*
                            castling   move     in      in
@@ -114,6 +155,118 @@ const int rook_relevant_bits[64] = {
     11, 10, 10, 10, 10, 10, 10, 11,
     12, 11, 11, 11, 11, 11, 11, 12
 };
+
+const int material_scores[12] = {
+    100,        // White Pawn   
+    300,        // White Knight
+    350,        // White Bishop
+    500,        // White Rook
+    1000,       // White Queen
+    10000,      // White King
+    -100,       // Black Pawn
+    -300,       // Black Knight
+    -350,       // Black Bishop
+    -500,       // Black Rook
+    -1000,      // Black Queen
+    -10000      // Black King
+};
+
+const int pawn_score[64] = {
+    90, 90, 90, 90, 90, 90, 90, 90,
+    30, 30, 30, 40, 40, 30, 30, 30,
+    20, 20, 30, 30, 30, 20, 20, 20,
+    10, 10, 10, 20, 20, 10, 10, 10,
+    5, 5, 10, 20, 20, 5, 5, 5, 
+    0, 0, 0, 5, 5, 0, 0, 0,
+    0, 0, 0, -10, -10, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0
+};
+
+const int knight_score[64] = {
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 10, 10, 0, 0, -5, 
+    -5, 5, 20, 20, 20, 20, 5, -5,
+    -5, 10, 20, 30, 30, 20, 10, -5,
+    -5, 10, 20, 30, 30, 20, 10, -5,
+    -5, 5, 20, 10, 10, 20, 5, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, -10, 0, 0, 0, 0, -10, -5
+};
+
+const int bishop_score[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 10, 10, 0, 0, 0,
+    0, 0, 10, 20, 20, 10, 0, 0,
+    0, 0, 10, 20, 20, 10, 0, 0,
+    0, 10, 0, 0, 0, 0, 10, 0,
+    0, 30, 0, 0, 0, 0, 30, 0,
+    0, 0, -10, 0, 0, -10, 0, 0
+};
+    
+const int rook_score[64] = {
+    50, 50, 50, 50, 50, 50, 50, 50,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    0, 0, 10, 20, 20, 10, 5, 0,
+    0, 0, 10, 20, 20, 10, 5, 0,
+    0, 0, 10, 20, 20, 10, 5, 0,
+    0, 0, 10, 20, 20, 10, 5, 0,
+    0, 0, 10, 20, 20, 10, 5, 0,
+    0, 0, 0, 20, 20, 0, 0, 0
+};
+
+const int king_score[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 5, 5, 5, 5, 0, 0,
+    0, 5, 5, 10, 10, 5, 5, 0,
+    0, 5, 10, 20, 20, 10, 5, 0,
+    0, 5, 10, 20, 20, 10, 5, 0,
+    0, 0, 5, 10, 10, 5, 0, 0,
+    0, 5, 5, -5, -5, 0, 5, 0,
+    0, 0, 5, 0, -15, 0, 10, 0
+};
+
+const int mirror_score[128] =
+{
+	a1, b1, c1, d1, e1, f1, g1, h1,
+	a2, b2, c2, d2, e2, f2, g2, h2,
+	a3, b3, c3, d3, e3, f3, g3, h3,
+	a4, b4, c4, d4, e4, f4, g4, h4,
+	a5, b5, c5, d5, e5, f5, g5, h5,
+	a6, b6, c6, d6, e6, f6, g6, h6,
+	a7, b7, c7, d7, e7, f7, g7, h7,
+	a8, b8, c8, d8, e8, f8, g8, h8
+};
+
+/*
+    Most valuable victim & Less valuable attacker         
+    (Victims) Pawn Knight Bishop   Rook  Queen   King
+  (Attackers)
+        Pawn   105    205    305    405    505    605
+      Knight   104    204    304    404    504    604
+      Bishop   103    203    303    403    503    603
+        Rook   102    202    302    402    502    602
+       Queen   101    201    301    401    501    601
+        King   100    200    300    400    500    600
+
+*/
+int mvv_lva[12][12] = 
+{
+ 	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+
+	105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+	104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+	103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+	102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+	101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+	100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
+};
+
 
 const U64 rook_magic_numbers[64] = {
     0x8a80104000800020ULL,

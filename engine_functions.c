@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "define.h"
 #ifdef WIN32
     #include <windows.h>
@@ -507,3 +508,191 @@ void perft(int depth){
     printf("\n    Time: %d ms\n", get_time_ms() - start);
 }
 
+//Score non è l'eval della posizione ma indica quanto è buona la posizione per un determinato colore
+int evaluate(){
+    int score = 0;
+    U64 eval_bitboard;
+    int piece, square;
+    for(int bb_piece = P; bb_piece <= k; bb_piece++){
+        eval_bitboard = bitboards[bb_piece];
+        while(eval_bitboard){
+            piece = bb_piece;
+            square = get_less_significant_bit_index(eval_bitboard);
+            score += material_scores[piece];
+            switch(piece){
+                case P: score += pawn_score[square]; break;
+                case p: score -= pawn_score[mirror_score[square]]; break;
+                case N: score += knight_score[square]; break;
+                case n: score -= knight_score[mirror_score[square]]; break;
+                case B: score += bishop_score[square]; break;
+                case b: score -= bishop_score[mirror_score[square]]; break;
+                case R: score += rook_score[square]; break;
+                case r: score -= rook_score[mirror_score[square]]; break;
+                //case Q: score += queen_score[square]; break;
+                //case q: score -= queen_score[mirror_score[square]]; break;
+                case K: score += king_score[square]; break;
+                case k: score -= king_score[mirror_score[square]]; break;
+                default: break;
+            }
+            clear_bit(eval_bitboard, square);
+        }
+    }
+    return (side == white) ? score : -score;
+
+}
+
+void search_position(int depth){
+    //Un poco di pulizia
+    int score = 0;
+    nodes = 0;
+    follow_pv = 0;
+    score_pv = 0;
+    memset(killer_move, 0, sizeof(killer_move));
+    memset(history_moves, 0, sizeof(history_moves));
+    memset(pv_table, 0, sizeof(pv_table));
+    memset(pv_length, 0, sizeof(pv_length));
+
+    for(int current_depth = 1; current_depth <= depth; current_depth++){
+        follow_pv = 1; //Flag che ci serve per capire se stiamo percorrendo la strada della mossa migliore
+
+        score = negamax(current_depth, -INFINITY, INFINITY);
+        printf("info depth %d nodes %ld score cp %d\n", current_depth, nodes, score);
+        for(int count = 0; count < pv_length[0]; count++){
+            print_move(pv_table[0][count]);
+            printf(" ");
+        }
+        printf("\n");
+    }
+
+    printf("bestmove ");
+    print_move(pv_table[0][0]);
+    printf("\n");
+    
+}
+
+
+int quiescence(int alpha, int beta){
+    nodes++;
+    int eval = evaluate();
+    if(eval >= beta) return beta;
+    if(eval > alpha) alpha = eval;
+
+    moves move_list[1];
+    generate_moves(move_list);
+    sort_moves(move_list);
+    for(int count = 0; count < move_list->count; count++){
+        copy_board();
+        ply++;
+        if(make_move(move_list->moves[count], only_captures) == 0){
+            ply--;
+            continue;
+        }
+        int score = -quiescence(-beta, -alpha);
+        ply--;
+        take_back();
+        if(score >= beta) return beta;    
+        if(score > alpha) alpha = score;
+    }
+    return alpha;
+}
+
+int negamax(int depth, int alpha, int beta){
+    int found_pv = 0;
+    pv_length[ply] = ply;
+    if(depth == 0) return quiescence(alpha, beta);
+
+    //Serve per evitare di avere problemi di Overflow (ma in teoria non dovrebbe mai succedere)
+    if(ply > MAX_PLY - 1) return evaluate();
+
+    nodes++;
+    int in_check = is_square_attacked((side == white) ? get_less_significant_bit_index(bitboards[K]) : get_less_significant_bit_index(bitboards[k]), side ^ 1);
+    if(in_check) depth++;
+    int legal_moves = 0;
+
+    if(depth >= 3 && in_check == 0 && ply){
+        copy_board();
+        side ^= 1;
+        enpassant = no_sqr;
+        int score = -negamax(depth -1 -2, -beta, -beta +1);
+        take_back();
+        if(score >= beta) return beta;
+    }
+
+    moves move_list[1];
+    generate_moves(move_list);
+    if(follow_pv) enable_pv_scoring(move_list);
+    sort_moves(move_list);
+    int moves_searched = 0;
+    for(int count = 0; count < move_list->count; count++){
+        copy_board();
+        ply++;
+        if(make_move(move_list->moves[count], all_moves) == 0){
+            ply--;
+            continue;
+        }
+
+        legal_moves++;
+
+        int score;
+        if(found_pv){
+            score = -negamax(depth -1, -alpha -1, -alpha);
+            if((score > alpha) && (score < beta)) score = -negamax(depth - 1, -beta, -alpha);
+        }
+        else {
+            if(moves_searched == 0) score = -negamax(depth - 1, -beta, -alpha);
+            else{
+                if(moves_searched >= full_depth_moves &&
+                   depth >= reduction_limit &&
+                   in_check == 0 &&
+                   get_move_capture(move_list->moves[count]) == 0 &&
+                   get_move_promoted(move_list->moves[count]) == 0) score = -negamax(depth -2, -alpha -1, -alpha);
+                else score = alpha +1;
+
+                if(score > alpha){
+                    score = -negamax(depth-1, -alpha -1, -alpha);
+                    if(score > alpha && score < beta) score = -negamax(depth-1, -beta, -alpha);
+                }
+            }
+
+        }
+        ply--;
+        take_back();
+        moves_searched++;
+        //fail-hard beta-cutoff: se la mossa migliore è stata trovata, non ha senso continuare a cercare
+        if(score >= beta){
+            if(get_move_capture(move_list->moves[count]) == 0){
+                killer_move[1][ply] = killer_move[0][ply];
+                killer_move[0][ply] = move_list->moves[count];
+            }
+            return beta;
+        }
+
+        if(score > alpha){
+            if(get_move_capture(move_list->moves[count]) == 0)
+                history_moves[get_move_piece(move_list->moves[count])][get_move_target(move_list->moves[count])] += depth;
+            alpha = score;
+
+            found_pv = 1;
+
+            pv_table[ply][ply] = move_list->moves[count];
+            for(int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++)
+                pv_table[ply][next_ply] = pv_table[ply + 1][next_ply];
+            pv_length[ply] = pv_length[ply + 1];
+        } 
+    }
+    if(legal_moves == 0){
+        if(in_check) return -49000 + ply; //Scacco matto
+        else return 0; //Stalemate
+    }
+    return alpha;
+}
+
+void enable_pv_scoring(moves *move_list){
+    follow_pv = 0;
+    for(int count = 0; count < move_list->count; count++){
+        if(pv_table[0][ply] == move_list->moves[count]){
+            follow_pv = 1;
+            score_pv = 1;
+        }
+    }
+}

@@ -31,7 +31,7 @@ void generate_moves(moves *move_list){
                             //Mossa normale
                             add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                             //Mossa di due caselle
-                            if(source_square >= a2 && source_square <= h2 && !get_bit(occupancies[both], target_square - 8)) //-8 perchè si muove avanti di 2 caselle
+                            if((source_square >= a2 && source_square <= h2) && !get_bit(occupancies[both], target_square - 8)) //-8 perchè si muove avanti di 2 caselle
                                 add_move(move_list, encode_move(source_square, target_square - 8, piece, 0, 0, 1, 0, 0));
                         }
                     }
@@ -42,7 +42,6 @@ void generate_moves(moves *move_list){
                         target_square = get_less_significant_bit_index(attacks);
 
                             //Si procede con il discriminare se la cattura porta ad una promozione, è una catura normale o un enpassant
-
                             //Promozione
                         if(source_square >= a7 && source_square <= h7){
 
@@ -113,7 +112,7 @@ void generate_moves(moves *move_list){
                             //Mossa normale
                             add_move(move_list, encode_move(source_square, target_square, piece, 0, 0, 0, 0, 0));
                             //Mossa di due caselle
-                            if(source_square >= a7 && source_square <= h7 && !get_bit(occupancies[both], target_square + 8)) //+ 8 perchè si muove avanti di 2 caselle
+                            if((source_square >= a7 && source_square <= h7) && !get_bit(occupancies[both], target_square + 8)) //+ 8 perchè si muove avanti di 2 caselle
                                 add_move(move_list, encode_move(source_square, target_square + 8, piece, 0, 0, 1, 0, 0));
                         }
                     }
@@ -123,10 +122,10 @@ void generate_moves(moves *move_list){
                             //Si procede con il discriminare se la cattura porta ad una promozione, è una catura normale o un enpassant
                             //Promozione
                         if(source_square >= a2 && source_square <= h2){
-                           add_move(move_list, encode_move(source_square, target_square, piece, Q, 1, 0, 0, 0));
-                           add_move(move_list, encode_move(source_square, target_square, piece, R, 1, 0, 0, 0));
-                           add_move(move_list, encode_move(source_square, target_square, piece, B, 1, 0, 0, 0));
-                           add_move(move_list, encode_move(source_square, target_square, piece, N, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, q, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, r, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, b, 1, 0, 0, 0));
+                           add_move(move_list, encode_move(source_square, target_square, piece, n, 1, 0, 0, 0));
                         }
                         else{
                             //Mossa normale
@@ -274,11 +273,11 @@ void generate_moves(moves *move_list){
 
 void print_move(int move){
     if(get_move_promoted(move))
-    printf("%s%s%c\n", square_to_coordinates[get_move_source(move)],
+    printf("%s%s%c", square_to_coordinates[get_move_source(move)],
                         square_to_coordinates[get_move_target(move)],
                         promoted_pieces[get_move_promoted(move)]);
     else
-        printf("%s%s\n", square_to_coordinates[get_move_source(move)],
+        printf("%s%s", square_to_coordinates[get_move_source(move)],
                         square_to_coordinates[get_move_target(move)]);                    
 }
 
@@ -367,11 +366,7 @@ int make_move(int move, int move_flag){
         //Handle pawn promotion
         if(promoted){
             clear_bit(bitboards[(side == white) ? P : p], target_square);
-            if(side == white)
-                set_bit(bitboards[promoted], target_square);
-            else{
-                set_bit(bitboards[promoted + 6], target_square); //promoted + 6 per passare al pezzo nero perchè promoted è sempre un pezzo bianco
-            }
+            set_bit(bitboards[(side == white) ? promoted : promoted + 6], target_square);
         }
         //Handle enpassant
         if(enpas)
@@ -434,5 +429,77 @@ int make_move(int move, int move_flag){
         }
         else return 0;
 
+    }
+}
+
+void print_move_scores(moves *move_list){
+    printf(" Move scores:\n\n");
+    for(int move_count = 0; move_count < move_list->count; move_count++){
+        printf(" move: ");
+        print_move(move_list->moves[move_count]);
+        printf("  score: %d\n", score_move(move_list->moves[move_count]));
+    }
+}
+
+int score_move(int move){
+    if(score_pv){
+        if(pv_table[0][ply] == move){
+            score_pv = 0;
+            //printf("PV move: ");
+            //print_move(move);
+            //printf(" ply: %d\n", ply);
+            return 20000; //Se la mossa è la prima mossa della PV table, la sua priorità è massima
+        }
+    }
+    if (get_move_capture(move)){
+        int target_piece = P; //Lo inizializzo solo perchè nel caso di enpassant (pedone cattura pedone, non ci interessa il colore)
+        int start_piece, end_piece;
+        if(side == white){
+            start_piece = p;
+            end_piece = k;
+        }
+        else{
+            start_piece = P;
+            end_piece = K;
+        }
+        for(int bb_piece = start_piece; bb_piece <= end_piece; bb_piece++){
+            if(get_bit(bitboards[bb_piece], get_move_target(move))){
+                target_piece = bb_piece;
+                break;
+            }
+        }
+        return mvv_lva[get_move_piece(move)][target_piece] + 10000;
+    }
+    else {
+        if(killer_move[0][ply] == move) return 9000; //Se la mossa è una killer move, la sua priorità è massima
+        else if(killer_move[1][ply] == move) return 8000; //Se la mossa è una killer move secondaria, la sua priorità è massima
+        else return history_moves[get_move_piece(move)][get_move_target(move)];  
+    }
+    return 0;
+}
+
+int sort_moves(moves *move_list){
+
+    int move_scores[move_list->count];
+    for(int move_count = 0; move_count < move_list->count; move_count++)
+        move_scores[move_count] = score_move(move_list->moves[move_count]);
+    //Non sarà il modo più efficiente di ordinare le mosse, ma l'array di mosse possibili è piccolo
+    // quindi non ci saranno problemi di performance
+    for (int current_move = 0; current_move < move_list->count; current_move++){
+        for (int next_move = current_move + 1; next_move < move_list->count; next_move++){
+            // compare current and next move scores
+            if (move_scores[current_move] < move_scores[next_move])
+            {
+                // swap scores
+                int temp_score = move_scores[current_move];
+                move_scores[current_move] = move_scores[next_move];
+                move_scores[next_move] = temp_score;
+                
+                // swap moves
+                int temp_move = move_list->moves[current_move];
+                move_list->moves[current_move] = move_list->moves[next_move];
+                move_list->moves[next_move] = temp_move;
+            }
+        }
     }
 }

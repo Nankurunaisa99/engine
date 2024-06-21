@@ -14,6 +14,9 @@
 #define tricky_position_enpassant "r3k2r/p2pqpb1/bn2pnp1/2pPN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq c6 0 1 "
 #define killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 #define cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
+#define custom_position "3qk2r/p2p1n1p/3p1b2/1p5P/nP2B3/2QPP3/P1P3PB/4K2R w Kk - 0 1"
+#define INFINITY 50000
+#define MAX_PLY 64
 
 //---------- MACROS ----------//
 
@@ -81,6 +84,8 @@ enum { P, N, B, R, Q, K, p, n, b, r, q, k };
 
 enum { all_moves, only_captures };
 
+enum { pvp, pvc, cvc, cvp, uci };
+
 //---------- STRUCTS ----------//
 
 typedef struct {
@@ -88,13 +93,27 @@ typedef struct {
     int count;
 } moves;
 
+typedef struct {
+    int move;
+    int capture_value;
+} capture_moves;
+
 //---------- GLOBALS ----------//
 
+extern const char *engine_name;
+extern const char *author_name;
 extern const char *square_to_coordinates[];
 extern const char promoted_pieces[];
 extern U64 pawn_attacks[2][64];
 extern U64 knight_attacks[64];
 extern U64 king_attacks[64];
+extern const int material_scores[12];
+extern const int pawn_score[64];
+extern const int knight_score[64];
+extern const int bishop_score[64];
+extern const int rook_score[64];
+extern const int king_score[64];
+extern const int mirror_score[128];
 extern const U64 not_a_file;
 extern const U64 not_h_file;
 extern const U64 not_hg_file;
@@ -118,6 +137,17 @@ extern char *unicode_pieces[12];
 extern int char_pieces[];
 extern const int castling_rights[64];
 extern long nodes;
+extern int ply;
+extern int follow_pv;
+extern int score_pv;
+extern int mvv_lva[12][12];
+extern int killer_move[2][64];
+extern int history_moves[12][64];
+extern int pv_length[64];
+extern int pv_table[64][64];
+extern int engine_move;
+extern int full_depth_moves;
+extern int reduction_limit;
 
 //---------- FUNCTIONS ----------//
 
@@ -145,7 +175,7 @@ extern void print_board();
 extern void parse_fen(const char *fen);
 extern int is_square_attacked(int square, int side);
 extern void print_attacked_squares(int side);
-extern void generate_moves();
+extern void generate_moves(moves *move_list);
 extern void print_move(int move);
 extern void print_move_list(moves *move_list);
 extern void add_move(moves *move_list, int move);
@@ -154,5 +184,18 @@ extern int get_time_ms();
 extern void perft_driver(int depth);
 extern void perft(int depth);
 extern int parse_move(char *move_string);
-
+extern void parse_position(char *command);
+extern void parse_go(char *command);
+extern void uci_loop();
+extern int evaluate();
+extern void search_position(int depth);
+extern int negamax(int depth, int alpha, int beta);
+extern int quiescence(int alpha, int beta);
+extern int score_move(int move);
+extern void print_move_scores(moves *move_list);
+extern int sort_moves(moves *move_list);
+extern void enable_pv_scoring(moves *move_list);
+extern void random_move_engine();
+extern void pseudo_random_engine(int strength);
+extern void angry_engine();
 #endif
